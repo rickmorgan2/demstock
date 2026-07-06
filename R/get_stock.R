@@ -28,6 +28,10 @@
 #' @param name An optional name for the output. \cr
 #' (Note: re-running the command without specifying a name for the new output 
 #' will result in previous output being rewritten.) 
+#' @param data A V-Dem data frame to calculate stock measures from. Defaults to
+#' the latest version loaded by the vdemdata package (vdemdata::vdem). Supply any
+#' V-Dem vintage or extract that includes country_id, country_text_id, year, and
+#' the variables named in 'var' and 'add'.
 #' @return A dataframe containing the original V-Dem variable(s) listed in 'var', their stock 
 #' measure(s) at each specified weight, along with country-year identifiers and 
 #' any user-specified additional variables from the V-Dem dataset.
