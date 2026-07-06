@@ -19,21 +19,13 @@ locf <- function(x) {
 #' @param data The V-Dem data frame that var and add are validated against.
 #' @import vdemdata
 #' @export
-check_input <- function(var, val, fill, add, name, data = vdemdata::vdem) {
-    if (!is.data.frame(data)) {
-        stop("data must be a data frame of V-Dem variables.")
+check_input <- function(var, val, fill, add, name, data = vdemdata::data) {
+    if (!all(var %in% names(vdemdata::vdem))) {
+        stop("var must be a variable in the V-Dem dataset.")
     }
 
-    if (!all(c("country_id", "country_text_id", "year") %in% names(data))) {
-        stop("data must contain country_id, country_text_id, and year.")
-    }
-
-    if (!all(var %in% names(data))) {
-        stop("var must be a variable in the supplied V-Dem data.")
-    }
-
-    if (!is.null(add) & !all(add %in% names(data))) {
-        stop("all elements of add must be variables in the supplied V-Dem data.")
+    if (!is.null(add) & !all(add %in% names(vdemdata::vdem))) {
+        stop("all elements of add must be variables in the V-Dem dataset.")
     }
 
     if (!is.numeric(fill) || fill != as.integer(fill) || fill < 0) {
@@ -71,19 +63,13 @@ check_input <- function(var, val, fill, add, name, data = vdemdata::vdem) {
 #' @export
 subset_data <- function(df, var, add = NULL) {
     `%!in%` <- Negate(`%in%`)
-    # V-Dem country_ids for German and Italian historical states
-    hist_ids <- c(349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,373)
 
-    # subset requested columns and drop historical states
-    df_out <- df %>%
-        dplyr::select(country_id, country_text_id, year, dplyr::all_of(var), dplyr::all_of(add)) %>%
-        dplyr::filter(country_id %!in% hist_ids)
+    # subset data and removes German and Italian historical states
+	df_out <- df %>%
+        dplyr::select(country_id, country_text_id, year, all_of(var), all_of(add)) %>%
+        dplyr::filter(country_id %!in% c(349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,373))
 
-    # report removed states from the supplied data, using names when available
-    removed <- df[df$country_id %in% hist_ids, ]
-    labels <- if ("country_name" %in% names(df)) removed$country_name else removed$country_id
-    cat(paste0("Removed the following states from subset data: ",
-        paste(sort(unique(labels)), collapse = ", "), ".\n"))
+    cat(paste0("Removed the following states from subset data: ", paste(names(table(vdemdata::vdem[which(vdemdata::vdem$country_id %in% c(349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,373)),]$country_name)), collapse=", "),".\n"))
 
     return(df_out)
 }
