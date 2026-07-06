@@ -117,7 +117,9 @@ expand_data <- function(df) {
 #' @param stock_tt The stock translation table, which contains the country-year combinations which will be changed to create stock_id.
 #' @import dplyr
 #' @export
-create_stock_id <- function(df, stock_tt) {
+create_stock_id <- function(df, stock_tt, start_year = 1964) {
+  stock_tt <- stock_tt |> 
+    dplyr::filter(year >= start_year)
     df_out <- dplyr::left_join(df, stock_tt, by = c("country_id", "country_text_id", "year"))
 
     stopifnot(nrow(df_out) == nrow(df))
@@ -142,8 +144,10 @@ create_stock_id <- function(df, stock_tt) {
 #' @param stock_tt The stock translation table, which contains the country-year combinations which will be changed to create stock_id.
 #' @import dplyr
 #' @export
-create_antecedence <- function(df, var, stock_tt){
-    
+create_antecedence <- function(df, var, stock_tt, start_year = 1964){
+  stock_tt <- stock_tt |> 
+    filter(year >= start_year)
+  
     df_stock <- df 
 
     ll <- lapply(var, function(v){

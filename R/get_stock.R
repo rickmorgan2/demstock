@@ -45,7 +45,8 @@
 #' get_stock(var="v2x_libdem", fill=10)
 #' get_stock(var=c("v2x_libdem", "v2csgender"), name="newdata")
 #' @export
-get_stock <- function(var = "v2x_polyarchy", val = 0.99, fill = 5, add = NULL, name = NULL, data = vdemdata::vdem) {
+get_stock <- function(var = "v2x_polyarchy", val = 0.99, fill = 5, add = NULL, name = NULL, 
+                      data = vdemdata::vdem, start_year = 1964) {
   # 1. check inputs
   check_input(var, val, fill, add, name, data)
   # 2. Subset variables and filter countries
@@ -53,9 +54,9 @@ get_stock <- function(var = "v2x_polyarchy", val = 0.99, fill = 5, add = NULL, n
   # 3. Expand data
   vdem_sub <- expand_data(vdem_sub)
   # 4. Create stock_id
-  vdem_sub <- create_stock_id(vdem_sub, stock_tt)
+  vdem_sub <- create_stock_id(vdem_sub, stock_tt, start_year = 1964)
   # 5. Create measure based on historical antecedence
-  vdem_sub <- create_antecedence(vdem_sub, var, stock_tt)
+  vdem_sub <- create_antecedence(vdem_sub, var, stock_tt, start_year = 1964)
   # 6. Normalize and fill forward years
   vdem_sub <- fill_data(vdem_sub, var, fill)
   # 7. Calculate stock
