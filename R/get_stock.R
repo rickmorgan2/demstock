@@ -28,6 +28,10 @@
 #' @param name An optional name for the output. \cr
 #' (Note: re-running the command without specifying a name for the new output 
 #' will result in previous output being rewritten.) 
+#' @param data A V-Dem data frame to calculate stock measures from. Defaults to
+#' the latest version loaded by the vdemdata package (vdemdata::vdem). Supply any
+#' V-Dem vintage or extract that includes country_id, country_text_id, year, and
+#' the variables named in 'var' and 'add'.
 #' @return A dataframe containing the original V-Dem variable(s) listed in 'var', their stock 
 #' measure(s) at each specified weight, along with country-year identifiers and 
 #' any user-specified additional variables from the V-Dem dataset.
@@ -40,27 +44,30 @@
 #' get_stock(var="v2x_libdem", val=.975)
 #' get_stock(var="v2x_libdem", fill=10)
 #' get_stock(var=c("v2x_libdem", "v2csgender"), name="newdata")
+#' get_stock(var="v2x_libdem", data=my_vdem_v13)
 #' @export
-get_stock <- function(var = "v2x_polyarchy", val = 0.99, fill = 5, add = NULL, name = NULL) {
+get_stock <- function(var = "v2x_polyarchy", val = 0.99, fill = 5, add = NULL, name = NULL, data = vdemdata::vdem) {
   # 1. check inputs
-  check_input(var, val, fill, add, name)
+  check_input(var, val, fill, add, name, data)
   # 2. Subset variables and filter countries
-  vdem_sub <- subset_data(vdemdata::vdem, var, add)
+  vdem_sub <- subset_data(data, var, add)
   # 3. Expand data
   vdem_sub <- expand_data(vdem_sub)
-  # 4. Create stock_id
-  vdem_sub <- create_stock_id(vdem_sub, stock_tt)
-  # 5. Create measure based on historical antecedence
-  vdem_sub <- create_antecedence(vdem_sub, var, stock_tt)
-  # 6. Normalize and fill forward years
+  # 4. Scope translation table to country-years present in the panel
+  stock_tt_sub <- dplyr::semi_join(stock_tt, vdem_sub, by = c("country_id", "country_text_id", "year"))
+  # 5. Create stock_id
+  vdem_sub <- create_stock_id(vdem_sub, stock_tt_sub)
+  # 6. Create measure based on historical antecedence
+  vdem_sub <- create_antecedence(vdem_sub, var, stock_tt_sub)
+  # 7. Normalize and fill forward years
   vdem_sub <- fill_data(vdem_sub, var, fill)
-  # 7. Calculate stock
+  # 8. Calculate stock
   vdem_sub <- calc_stock(vdem_sub, var, val)
-  # 8. check output
+  # 9. check output
   stopifnot(is.data.frame(vdem_sub))
   stopifnot(!anyNA(vdem_sub$country_id))
   stopifnot(!anyNA(vdem_sub$year))
-  # 9. Assign optional name in global environment
+  # 10. Assign optional name in global environment
   if(is.null(name)) {
     return(vdem_sub)
   } else {
